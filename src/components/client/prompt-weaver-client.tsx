@@ -1,9 +1,8 @@
+
 "use client";
 
-import type { SuggestTemplateInput, SuggestTemplateOutput } from '@/ai/flows/suggest-template';
 import type { RefinePromptInput, RefinePromptOutput } from '@/ai/flows/refine-prompt';
 import { refinePrompt } from '@/ai/flows/refine-prompt';
-// import { suggestTemplate } from '@/ai/flows/suggest-template'; // Uncomment if suggestTemplate is used
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
@@ -11,23 +10,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { Languages, Copy, Loader2, Sparkles, Mail, FileText, Code, BookOpen, MessageSquare } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Languages, Copy, Loader2, Sparkles, Wand2 } from 'lucide-react'; // Replaced unused icons
 
-type PromptCategory = 'Email' | 'Resume' | 'Coding' | 'Story' | 'ChatGPT';
-const promptCategories: { value: PromptCategory; label: string; icon: React.ElementType }[] = [
-  { value: 'Email', label: 'Email', icon: Mail },
-  { value: 'Resume', label: 'Resume', icon: FileText },
-  { value: 'Coding', label: 'Coding', icon: Code },
-  { value: 'Story', label: 'Story', icon: BookOpen },
-  { value: 'ChatGPT', label: 'ChatGPT', icon: MessageSquare },
+type PromptLevel = 'Quick' | 'Balanced' | 'Comprehensive';
+const promptLevels: { value: PromptLevel; label: string; }[] = [
+  { value: 'Quick', label: 'Quick Suggestions' },
+  { value: 'Balanced', label: 'Balanced Options' },
+  { value: 'Comprehensive', label: 'Detailed Drafts' },
 ];
 
 export default function PromptWeaverClient() {
   const [language, setLanguage] = React.useState<'en' | 'ta'>('en');
-  const [category, setCategory] = React.useState<PromptCategory | undefined>(undefined);
+  const [promptLevel, setPromptLevel] = React.useState<PromptLevel>('Balanced');
   const [inputText, setInputText] = React.useState('');
-  const [refinedPrompt, setRefinedPrompt] = React.useState('');
+  const [refinedPrompts, setRefinedPrompts] = React.useState<string[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const { toast } = useToast();
@@ -39,15 +35,18 @@ export default function PromptWeaverClient() {
     }
     setError(null);
     setIsLoading(true);
-    setRefinedPrompt('');
+    setRefinedPrompts([]);
 
     try {
       const input: RefinePromptInput = {
         instruction: inputText,
-        category: category,
+        promptLevel: promptLevel,
       };
       const result: RefinePromptOutput = await refinePrompt(input);
-      setRefinedPrompt(result.refinedPrompt);
+      setRefinedPrompts(result.refinedPrompts || []);
+      if (!result.refinedPrompts || result.refinedPrompts.length === 0) {
+        setError('The AI did not return any prompt suggestions. You can try again.');
+      }
     } catch (e) {
       console.error(e);
       const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
@@ -62,13 +61,13 @@ export default function PromptWeaverClient() {
     }
   };
 
-  const handleCopyToClipboard = () => {
-    if (!refinedPrompt) return;
-    navigator.clipboard.writeText(refinedPrompt)
+  const handleCopyToClipboard = (promptText: string) => {
+    if (!promptText) return;
+    navigator.clipboard.writeText(promptText)
       .then(() => {
         toast({
           title: "Copied!",
-          description: "The refined prompt has been copied to your clipboard.",
+          description: "The prompt has been copied to your clipboard.",
         });
       })
       .catch(err => {
@@ -83,20 +82,20 @@ export default function PromptWeaverClient() {
 
   const toggleLanguage = () => {
     setLanguage(prev => (prev === 'en' ? 'ta' : 'en'));
-    // Placeholder for actual language switching logic if UI text needs to change
     toast({
       title: "Language Switched",
-      description: `Language set to ${language === 'en' ? 'Tamil' : 'English'}. (UI placeholder)`,
+      description: `Language set to ${language === 'en' ? 'Tamil' : 'English'}. (Note: AI content generation is currently English-only)`,
     });
   };
   
-  const selectedCategoryIcon = category ? promptCategories.find(c => c.value === category)?.icon : null;
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
       <header className="w-full max-w-3xl mb-8">
         <div className="flex justify-between items-center py-4">
-          <h1 className="text-4xl font-headline font-bold text-primary">PromptWeaver</h1>
+          <h1 className="text-4xl font-headline font-bold text-primary flex items-center">
+            <Wand2 className="mr-3 h-10 w-10 text-accent" />
+            PromptWeaver
+          </h1>
           <Button variant="outline" size="icon" onClick={toggleLanguage} aria-label="Switch Language">
             <Languages className="h-5 w-5" />
             <span className="ml-2 font-semibold">{language === 'en' ? 'EN' : 'TA'}</span>
@@ -106,28 +105,22 @@ export default function PromptWeaverClient() {
       </header>
 
       <main className="w-full max-w-3xl space-y-8">
-        <Card className="shadow-lg">
+        <Card className="shadow-lg rounded-xl">
           <CardHeader>
-            <CardTitle className="text-2xl font-headline text-primary">Craft Your Prompt</CardTitle>
-            <CardDescription>Select a category and describe your idea. We'll help you refine it.</CardDescription>
+            <CardTitle className="text-2xl font-headline text-primary">Craft Your Idea</CardTitle>
+            <CardDescription>Select a detail level and describe your idea. We'll help you refine it.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <label htmlFor="category-select" className="block text-sm font-medium text-foreground mb-1">Category (Optional)</label>
-              <Select value={category} onValueChange={(value: PromptCategory) => setCategory(value)}>
-                <SelectTrigger id="category-select" className="w-full text-base py-3">
-                  <div className="flex items-center">
-                    {selectedCategoryIcon && React.createElement(selectedCategoryIcon, { className: "mr-2 h-5 w-5 text-muted-foreground" })}
-                    <SelectValue placeholder="Select a category..." />
-                  </div>
+              <label htmlFor="prompt-level-select" className="block text-sm font-medium text-foreground mb-1">Prompt Detail Level</label>
+              <Select value={promptLevel} onValueChange={(value: PromptLevel) => setPromptLevel(value)}>
+                <SelectTrigger id="prompt-level-select" className="w-full text-base py-3 rounded-md">
+                  <SelectValue placeholder="Select a detail level..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {promptCategories.map(cat => (
-                    <SelectItem key={cat.value} value={cat.value} className="text-base py-2">
-                       <div className="flex items-center">
-                         <cat.icon className="mr-2 h-5 w-5 text-muted-foreground" />
-                         {cat.label}
-                       </div>
+                  {promptLevels.map(level => (
+                    <SelectItem key={level.value} value={level.value} className="text-base py-2">
+                       {level.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -140,16 +133,16 @@ export default function PromptWeaverClient() {
                 id="prompt-input"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="e.g., 'write email teacher sick', 'python script to parse csv', 'story about a lost robot'"
-                className="min-h-[120px] text-base p-3"
+                placeholder="e.g., 'email to my boss about project delay', 'python script to sort files by date', 'fantasy story about a dragon learning to bake'"
+                className="min-h-[120px] text-base p-3 rounded-md"
                 aria-label="Your idea for a prompt"
               />
             </div>
 
             <Button 
               onClick={handleRefinePrompt} 
-              disabled={isLoading} 
-              className="w-full text-lg py-6 bg-accent hover:bg-accent/90 text-accent-foreground"
+              disabled={isLoading || !inputText.trim()} 
+              className="w-full text-lg py-6 bg-accent hover:bg-accent/90 text-accent-foreground rounded-md shadow-md hover:shadow-lg transition-shadow"
               aria-label="Refine Prompt"
             >
               {isLoading ? (
@@ -157,25 +150,28 @@ export default function PromptWeaverClient() {
               ) : (
                 <Sparkles className="mr-2 h-5 w-5" />
               )}
-              Refine Prompt
+              Refine My Idea
             </Button>
-            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+            {error && <p className="text-sm text-destructive mt-2 p-2 bg-destructive/10 rounded-md">{error}</p>}
           </CardContent>
         </Card>
 
-        {refinedPrompt && (
-          <Card className="shadow-lg">
+        {refinedPrompts.length > 0 && (
+          <Card className="shadow-lg rounded-xl">
             <CardHeader>
-              <CardTitle className="text-2xl font-headline text-primary">Your Refined Prompt</CardTitle>
+              <CardTitle className="text-2xl font-headline text-primary">Refined Prompt Suggestions</CardTitle>
+              <CardDescription>Here are a few variations based on your idea and selected detail level. Copy the one you like best!</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-secondary p-4 rounded-md min-h-[100px] text-base text-secondary-foreground whitespace-pre-wrap">
-                {refinedPrompt}
-              </div>
-              <Button onClick={handleCopyToClipboard} variant="outline" className="w-full text-base py-3">
-                <Copy className="mr-2 h-5 w-5" />
-                Copy Prompt
-              </Button>
+            <CardContent className="space-y-6">
+              {refinedPrompts.map((prompt, index) => (
+                <div key={index} className="border border-border p-4 rounded-lg bg-card shadow">
+                  <p className="text-secondary-foreground whitespace-pre-wrap text-sm mb-3">{prompt}</p>
+                  <Button onClick={() => handleCopyToClipboard(prompt)} variant="outline" size="sm" className="w-full text-base py-2.5 rounded-md">
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy Suggestion {index + 1}
+                  </Button>
+                </div>
+              ))}
             </CardContent>
           </Card>
         )}
@@ -186,3 +182,4 @@ export default function PromptWeaverClient() {
     </div>
   );
 }
+

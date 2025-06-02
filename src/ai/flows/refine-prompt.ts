@@ -3,7 +3,7 @@
 'use server';
 
 /**
- * @fileOverview A flow to refine simple user instructions into high-quality prompts.
+ * @fileOverview A flow to refine simple user instructions into multiple high-quality prompt suggestions based on a selected level.
  *
  * - refinePrompt - A function that refines the prompt.
  * - RefinePromptInput - The input type for the refinePrompt function.
@@ -16,18 +16,17 @@ import {z} from 'genkit';
 const RefinePromptInputSchema = z.object({
   instruction: z
     .string()
-    .describe('A simple or incomplete instruction to be refined into a high-quality prompt.'),
-  category: z
-    .enum(['Email', 'Resume', 'Coding', 'Story', 'ChatGPT'])
-    .describe('The category of the prompt to be refined.')
-    .optional(),
+    .describe('A simple or incomplete instruction to be refined into high-quality prompts.'),
+  promptLevel: z
+    .enum(['Quick', 'Balanced', 'Comprehensive'])
+    .describe('The desired complexity and style of prompt suggestions.'),
 });
 export type RefinePromptInput = z.infer<typeof RefinePromptInputSchema>;
 
 const RefinePromptOutputSchema = z.object({
-  refinedPrompt: z
-    .string()
-    .describe('The refined, high-quality prompt suitable for the specified category.'),
+  refinedPrompts: z
+    .array(z.string().describe("A refined prompt suggestion."))
+    .describe('An array of 2-3 refined prompt suggestions tailored to the selected level.'),
 });
 export type RefinePromptOutput = z.infer<typeof RefinePromptOutputSchema>;
 
@@ -39,25 +38,38 @@ const prompt = ai.definePrompt({
   name: 'refinePromptPrompt',
   input: {schema: RefinePromptInputSchema},
   output: {schema: RefinePromptOutputSchema},
-  prompt: `You are an expert prompt engineer. Your task is to refine user instructions into high-quality, effective prompts for AI models, based on the principles of good prompt design.
+  prompt: `You are an expert prompt engineer. Your task is to refine a user's instruction into an array of 2-3 distinct, high-quality prompt variations. The style and detail of these variations should be guided by the user-selected 'promptLevel'.
 
-The user will provide a simple or incomplete instruction and an optional category. Transform this into a complete and effective prompt by applying the following guidelines:
+Apply the principles of good prompt design: Action Words, Context, Clarity, Specificity, Examples (encourage user to provide to target AI), Desired Output Format, Explicit Guidance, Tone, and Review/Refine.
 
-1.  **Start with Action Words**: Ensure the refined prompt begins with a strong action verb (e.g., "Generate," "Write," "Create," "Explain," "Summarize," "List," "Compare").
-2.  **Incorporate Context**: Use the user's instruction ('{{{instruction}}}') and category ('{{#if category}}{{category}}{{else}}General{{/if}}') to make the refined prompt rich in context. If the instruction is very vague, the refined prompt should gently guide the user to add more specific context or details. This includes personal preferences, past experiences, specific constraints, or any background that would help the AI tailor its response.
-3.  **Clarity and Specificity**: Make the refined prompt unambiguous, clear, and highly specific to ensure the AI understands the task precisely. Avoid vague terms.
-4.  **Suggest Examples**: If appropriate for the task (especially for creative or formatting-sensitive tasks), the refined prompt should encourage the user to provide examples *to the target AI* (e.g., "You can provide an example of the desired output format.").
-5.  **Specify Desired Output Format**: The refined prompt should guide the user to specify the desired length, format, or level of detail (e.g., "Specify the desired length (e.g., concise summary, detailed explanation, X words/paragraphs) and format (e.g., bullet points, paragraph, JSON)."). This also includes the specific pieces of information expected in the output.
-6.  **Explicit Guidance & Warnings**: Include clear directives on what the AI should do, what to include, and, if implied by the instruction or category, what to avoid or prioritize. Mention any critical warnings or constraints (e.g., "Ensure information is up-to-date," "Avoid discussing X topic," "Verify all details provided are accurate.").
-7.  **Define Tone**: Suggest an appropriate tone based on the category and instruction, or prompt the user to specify one if it's crucial (e.g., "Adopt a [formal/casual/persuasive/technical] tone.").
-8.  **Review and Refine**: Encourage the user to review the generated prompt for completeness and clarity.
+User's Input:
+Instruction: {{{instruction}}}
+Selected Prompt Level: {{{promptLevel}}}
 
-Here is an example of transforming a simple user instruction into a high-quality prompt:
+Based on the 'promptLevel', generate the array of prompt variations as follows:
 
-**User's Simple Idea:** "Suggest some hikes near San Francisco."
-**Category:** General (or "Outdoor Activities")
+1.  **If 'promptLevel' is 'Quick':**
+    *   Generate 2-3 concise and direct prompts.
+    *   Each prompt must start with a strong action verb (e.g., "Generate," "Write," "List").
+    *   Focus on brevity and immediate usability. Keep context minimal but sufficient.
 
-**Refined High-Quality Prompt (incorporating goal, return format, warnings, and context):**
+2.  **If 'promptLevel' is 'Balanced':**
+    *   Generate 2-3 moderately detailed prompts.
+    *   These prompts should incorporate relevant context derived from the instruction.
+    *   They should suggest a desired output format or length.
+    *   They may subtly guide the tone.
+    *   Aim for a balance between simplicity and comprehensiveness.
+
+3.  **If 'promptLevel' is 'Comprehensive':**
+    *   Generate 2-3 highly detailed and structured prompts.
+    *   These prompts must be rich in context.
+    *   Provide explicit instructions regarding length, format, style, and specific information to include or exclude.
+    *   Suggest defining a persona for the AI if applicable.
+    *   Encourage the user to provide examples to the target AI within the prompt (e.g., "You can provide an example of the desired output format like so: ...").
+    *   Incorporate critical warnings or constraints.
+    *   Refer to the detailed example below for the quality and structure expected for 'Comprehensive' prompts.
+
+**Example of a 'Comprehensive' quality prompt (for user instruction "Suggest some hikes near San Francisco"):**
 "I want a list of the best medium-length hikes within two hours of San Francisco.
 Each hike should provide a cool and unique adventure, and be lesser known.
 
@@ -79,12 +91,17 @@ Important considerations (Warnings):
 
 For context to help you choose (Context Dump): My girlfriend and I hike a ton! We've done pretty much all of the local SF hikes, whether that's Presidio or Golden Gate Park. We definitely want to get out of town. We did Mount Tam pretty recently (the whole thing from the beginning of the stairs to Stinson) – it was really long, and we are definitely in the mood for something different this weekend! Ocean views would still be nice. We love delicious food; one thing I loved about the Mt. Tam hike is that it ends with a celebration (arriving in town for breakfast!). The old missile silos and stuff near Discovery Point are cool, but I've done that hike probably 20x at this point. We won't be seeing each other for a few weeks (she has to stay in LA for work), so the uniqueness of this hike really counts."
 
-User's Input:
-Instruction: {{{instruction}}}
-Category: {{#if category}}{{category}}{{else}}General{{/if}}
+Your output MUST be a JSON object with a single key "refinedPrompts" which is an array of 2-3 strings, where each string is a complete prompt. For example:
+{
+  "refinedPrompts": [
+    "Prompt variation 1...",
+    "Prompt variation 2...",
+    "Prompt variation 3..."
+  ]
+}
 
-Based on this, generate ONLY the refined prompt string as the output. The refined prompt should be ready to be used with an AI model and incorporate the principles and example above.
-Refined Prompt:`,
+Generate the array of refined prompts now.
+`,
 });
 
 const refinePromptFlow = ai.defineFlow(
@@ -95,6 +112,9 @@ const refinePromptFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output || !output.refinedPrompts) {
+      throw new Error('AI did not return the expected refinedPrompts array.');
+    }
+    return output;
   }
 );
