@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { Languages, Copy, Loader2, Sparkles, Wand2 } from 'lucide-react'; // Replaced unused icons
+import { Languages, Copy, Loader2, Sparkles, Wand2 } from 'lucide-react';
 
 type PromptLevel = 'Quick' | 'Balanced' | 'Comprehensive';
 const promptLevels: { value: PromptLevel; label: string; }[] = [
@@ -49,11 +49,20 @@ export default function PromptWeaverClient() {
       }
     } catch (e) {
       console.error(e);
-      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
-      setError(`Failed to refine prompt: ${errorMessage}`);
+      let userFriendlyMessage = 'An unknown error occurred while refining your prompt.';
+      if (e instanceof Error) {
+        if (e.message.includes('503') || e.message.toLowerCase().includes('model is overloaded')) {
+          userFriendlyMessage = 'The AI model is currently busy or overloaded. Please try again in a few moments.';
+        } else if (e.message.toLowerCase().includes('did not return the expected refinedprompts array')) {
+            userFriendlyMessage = 'The AI successfully processed your request but did not return any prompt suggestions. You might want to try rephrasing your idea or trying again.';
+        } else {
+          userFriendlyMessage = `Failed to refine prompt: ${e.message}`;
+        }
+      }
+      setError(userFriendlyMessage);
       toast({
         title: "Error",
-        description: `Failed to refine prompt: ${errorMessage}`,
+        description: userFriendlyMessage,
         variant: "destructive",
       });
     } finally {
@@ -182,4 +191,3 @@ export default function PromptWeaverClient() {
     </div>
   );
 }
-
