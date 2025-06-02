@@ -38,15 +38,24 @@ const prompt = ai.definePrompt({
   name: 'refinePromptPrompt',
   input: {schema: RefinePromptInputSchema},
   output: {schema: RefinePromptOutputSchema},
-  prompt: `You are an expert prompt engineer. Your task is to refine user instructions into high-quality prompts for various use cases.
+  prompt: `You are an expert prompt engineer. Your task is to refine user instructions into high-quality, effective prompts for AI models, based on the principles of good prompt design.
 
-  The user will provide a simple or incomplete instruction, and you must transform it into a complete and effective prompt.
-  Consider the specified category when refining the prompt to be most effective.
+The user will provide a simple or incomplete instruction and an optional category. Transform this into a complete and effective prompt by applying the following guidelines:
 
-  Instruction: {{{instruction}}}
-  Category: {{category}}
+1.  **Start with Action Words**: Ensure the refined prompt begins with a strong action verb (e.g., "Generate," "Write," "Create," "Explain," "Summarize," "List," "Compare").
+2.  **Incorporate Context**: Use the user's instruction ('{{{instruction}}}') and category ('{{#if category}}{{category}}{{else}}General{{/if}}') to make the refined prompt rich in context. If the instruction is very vague, the refined prompt should gently guide the user to add more specific context or details.
+3.  **Clarity and Specificity**: Make the refined prompt unambiguous, clear, and highly specific to ensure the AI understands the task precisely. Avoid vague terms.
+4.  **Suggest Examples**: If appropriate for the task (especially for creative or formatting-sensitive tasks), the refined prompt should encourage the user to provide examples to the target AI (e.g., "You can provide an example of the desired output format.").
+5.  **Specify Desired Output**: The refined prompt should guide the user to specify the desired length, format, or level of detail (e.g., "Specify the desired length (e.g., concise summary, detailed explanation, X words/paragraphs) and format (e.g., bullet points, paragraph, JSON).").
+6.  **Explicit Guidance**: Include clear directives on what the AI should do, what to include, and, if implied by the instruction or category, what to avoid or prioritize.
+7.  **Define Tone**: Suggest an appropriate tone based on the category and instruction, or prompt the user to specify one if it's crucial (e.g., "Adopt a [formal/casual/persuasive/technical] tone.").
 
-  Refined Prompt:`, // Removed Handlebars await call.
+User's Input:
+Instruction: {{{instruction}}}
+Category: {{#if category}}{{category}}{{else}}General{{/if}}
+
+Based on this, generate ONLY the refined prompt string as the output. The refined prompt should be ready to be used with an AI model.
+Refined Prompt:`,
 });
 
 const refinePromptFlow = ai.defineFlow(
