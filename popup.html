@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptWeaver</title>
+  <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+  <div id="app" class="container">
+    <header>
+      <h1>PromptWeaver</h1>
+      <button id="languageToggle" class="icon-button">EN</button>
+    </header>
+    
+    <main>
+      <div class="card">
+        <div class="card-header">
+          <h2>Craft Your Idea</h2>
+          <p>Select a detail level and describe your idea. We'll help you refine it.</p>
+        </div>
+        
+        <div class="card-content">
+          <div class="select-wrapper">
+            <label for="promptLevel">Prompt Detail Level</label>
+            <select id="promptLevel" class="select">
+              <option value="Quick">Quick Suggestions</option>
+              <option value="Balanced" selected>Balanced Options</option>
+              <option value="Comprehensive">Detailed Drafts</option>
+            </select>
+          </div>
+          
+          <div class="textarea-wrapper">
+            <label for="promptInput">Your Idea</label>
+            <textarea id="promptInput" placeholder="e.g., 'email to my boss about project delay', 'python script to sort files by date', 'fantasy story about a dragon learning to bake'"></textarea>
+          </div>
+          
+          <button id="refineButton" class="primary-button">
+            <span class="button-content">
+              <span class="sparkle-icon">✨</span>
+              Refine My Idea
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div id="results" class="card hidden">
+        <div class="card-header">
+          <h2>Refined Prompt Suggestions</h2>
+          <p>Here are a few variations based on your idea and selected detail level. Copy the one you like best!</p>
+        </div>
+        <div id="suggestions" class="card-content">
+          <!-- Suggestions will be inserted here -->
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>&copy; 2025 PromptWeaver. Weave your words wisely.</p>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+:root {
+  --background: hsl(0, 0%, 87.8%);
+  --foreground: hsl(210, 10%, 23%);
+  --primary: hsl(210, 13%, 50%);
+  --primary-foreground: hsl(210, 20%, 98%);
+  --accent: hsl(271, 76%, 53%);
+  --accent-foreground: hsl(271, 0%, 98%);
+  --border: hsl(0, 0%, 80.8%);
+  --radius: 0.5rem;
+}
+
+body {
+  width: 400px;
+  margin: 0;
+  font-family: 'PT Sans', sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.container {
+  padding: 1rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+h1 {
+  font-size: 1.5rem;
+  color: var(--primary);
+  margin: 0;
+}
+
+.icon-button {
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  cursor: pointer;
+}
+
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.card-header p {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  opacity: 0.8;
+}
+
+.card-content {
+  padding: 1rem;
+}
+
+.select-wrapper, .textarea-wrapper {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+}
+
+textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.primary-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.primary-button:hover {
+  background: hsl(271, 76%, 48%);
+}
+
+.button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.suggestion {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.suggestion:last-child {
+  margin-bottom: 0;
+}
+
+.copy-button {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.copy-button:hover {
+  background: var(--background);
+}
+
+.hidden {
+  display: none;
+}
+
+footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--foreground);
+  opacity: 0.7;
+  margin-top: 1rem;
+}
