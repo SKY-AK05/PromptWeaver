@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
       refineButton.disabled = true;
-      refineButton.innerHTML = '<span class="button-content">Refining...</span>';
+      refineButton.innerHTML = '<span class="button-content"><span class="refining-animation">🔮</span> Refining...</span>';
 
       const refinedPrompts = await refinePrompt(input, promptLevel.value);
       displayResults(refinedPrompts);
@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
     prompts.forEach((prompt, index) => {
       const suggestion = document.createElement('div');
       suggestion.className = 'suggestion';
+      suggestion.style.animationDelay = `${index * 0.2}s`;
       suggestion.innerHTML = `
         <p>${prompt}</p>
         <button class="copy-button" data-prompt="${encodeURIComponent(prompt)}">
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Mock refinePrompt function - replace with actual API call
   async function refinePrompt(instruction, promptLevel) {
     // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Return mock refined prompts
     return [

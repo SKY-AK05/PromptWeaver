@@ -1,12 +1,29 @@
 :root {
-  --background: hsl(0, 0%, 87.8%);
-  --foreground: hsl(210, 10%, 23%);
-  --primary: hsl(210, 13%, 50%);
-  --primary-foreground: hsl(210, 20%, 98%);
-  --accent: hsl(271, 76%, 53%);
-  --accent-foreground: hsl(271, 0%, 98%);
-  --border: hsl(0, 0%, 80.8%);
+  --background: hsl(198, 100%, 24%);
+  --foreground: hsl(60, 54%, 95%);
+  --primary: hsl(187, 59%, 35%);
+  --primary-foreground: hsl(60, 54%, 95%);
+  --accent: hsl(160, 100%, 35%);
+  --accent-foreground: hsl(60, 54%, 95%);
+  --border: hsl(187, 59%, 45%);
   --radius: 0.5rem;
+}
+
+@keyframes wave {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 body {
@@ -26,11 +43,12 @@ header {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  animation: fadeIn 0.5s ease-out;
 }
 
 h1 {
   font-size: 1.5rem;
-  color: var(--primary);
+  color: var(--primary-foreground);
   margin: 0;
 }
 
@@ -39,14 +57,26 @@ h1 {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: transparent;
+  color: var(--foreground);
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  background: var(--primary);
 }
 
 .card {
-  background: white;
+  background: var(--primary);
   border-radius: var(--radius);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   margin-bottom: 1rem;
+  animation: fadeIn 0.5s ease-out;
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
 }
 
 .card-header {
@@ -57,14 +87,14 @@ h1 {
 .card-header h2 {
   margin: 0;
   font-size: 1.25rem;
-  color: var(--primary);
+  color: var(--foreground);
 }
 
 .card-header p {
   margin: 0.5rem 0 0;
   font-size: 0.875rem;
   color: var(--foreground);
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .card-content {
@@ -79,6 +109,7 @@ label {
   display: block;
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
+  color: var(--foreground);
 }
 
 .select {
@@ -87,6 +118,8 @@ label {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-family: inherit;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 textarea {
@@ -97,6 +130,8 @@ textarea {
   border-radius: var(--radius);
   font-family: inherit;
   resize: vertical;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .primary-button {
@@ -108,11 +143,17 @@ textarea {
   border-radius: var(--radius);
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .primary-button:hover {
-  background: hsl(271, 76%, 48%);
+  background: hsl(160, 100%, 30%);
+  transform: translateY(-2px);
+}
+
+.primary-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .button-content {
@@ -122,11 +163,17 @@ textarea {
   gap: 0.5rem;
 }
 
+.sparkle-icon {
+  animation: pulse 2s infinite;
+}
+
 .suggestion {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1rem;
   margin-bottom: 1rem;
+  background: var(--background);
+  animation: wave 0.5s ease-out;
 }
 
 .suggestion:last-child {
@@ -141,11 +188,12 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  color: var(--foreground);
 }
 
 .copy-button:hover {
-  background: var(--background);
+  background: var(--primary);
 }
 
 .hidden {
@@ -156,6 +204,29 @@ footer {
   text-align: center;
   font-size: 0.75rem;
   color: var(--foreground);
-  opacity: 0.7;
+  opacity: 0.8;
   margin-top: 1rem;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-size: 0.875rem;
+  animation: fadeIn 0.3s ease-out;
+  z-index: 1000;
+}
+
+.toast.error {
+  background: hsl(0, 100%, 45%);
+}
+
+.refining-animation {
+  display: inline-block;
+  animation: wave 1.5s infinite;
 }
