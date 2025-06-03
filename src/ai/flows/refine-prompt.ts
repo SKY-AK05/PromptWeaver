@@ -1,17 +1,10 @@
-
-// src/ai/flows/refine-prompt.ts
 'use server';
-
-/**
- * @fileOverview A flow to refine simple user instructions into multiple high-quality prompt suggestions based on a selected level.
- *
- * - refinePrompt - A function that refines the prompt.
- * - RefinePromptInput - The input type for the refinePrompt function.
- * - RefinePromptOutput - The return type for the refinePrompt function.
- */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { HfInference } from '@huggingface/inference';
+
+const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
 const RefinePromptInputSchema = z.object({
   instruction: z
@@ -31,7 +24,32 @@ const RefinePromptOutputSchema = z.object({
 export type RefinePromptOutput = z.infer<typeof RefinePromptOutputSchema>;
 
 export async function refinePrompt(input: RefinePromptInput): Promise<RefinePromptOutput> {
-  return refinePromptFlow(input);
+  try {
+    // First, use Hugging Face model for initial refinement
+    const hfPrompt = `Refine this prompt instruction into a high-quality ${input.promptLevel.toLowerCase()} prompt: ${input.instruction}`;
+    
+    const hfResponse = await hf.textGeneration({
+      model: 'gpt2',  // You can change this to other models
+      inputs: hfPrompt,
+      parameters: {
+        max_new_tokens: 100,
+        temperature: 0.7,
+        top_p: 0.95,
+        repetition_penalty: 1.2
+      }
+    });
+
+    // Then use Gemini for further refinement and formatting
+    const refinedPrompt = await refinePromptFlow({
+      instruction: hfResponse.generated_text,
+      promptLevel: input.promptLevel
+    });
+
+    return refinedPrompt;
+  } catch (error) {
+    console.error('Error in refinePrompt:', error);
+    throw new Error('Failed to refine prompt');
+  }
 }
 
 const prompt = ai.definePrompt({
@@ -67,41 +85,10 @@ Based on the 'promptLevel', generate the array of prompt variations as follows:
     *   Suggest defining a persona for the AI if applicable.
     *   Encourage the user to provide examples to the target AI within the prompt (e.g., "You can provide an example of the desired output format like so: ...").
     *   Incorporate critical warnings or constraints.
-    *   Refer to the detailed example below for the quality and structure expected for 'Comprehensive' prompts.
 
-**Example of a 'Comprehensive' quality prompt (for user instruction "Suggest some hikes near San Francisco"):**
-"I want a list of the best medium-length hikes within two hours of San Francisco.
-Each hike should provide a cool and unique adventure, and be lesser known.
+Your output MUST be a JSON object with a single key "refinedPrompts" which is an array of 2-3 strings, where each string is a complete prompt.
 
-For each hike, return the following details:
-*   The name of the hike as I'd find it on AllTrails.
-*   The starting address of the hike.
-*   The ending address of the hike (if different from starting).
-*   Total distance of the hike.
-*   Estimated driving time from San Francisco to the trailhead.
-*   Estimated hike duration.
-*   A brief description of what makes it a cool and unique adventure.
-
-Please return the top 3 recommendations.
-
-Important considerations (Warnings):
-*   Be careful to ensure that the name of the trail is correct.
-*   Verify that the trail actually exists and is currently open.
-*   Ensure any time estimates (drive time, hike duration) are reasonably accurate.
-
-For context to help you choose (Context Dump): My girlfriend and I hike a ton! We've done pretty much all of the local SF hikes, whether that's Presidio or Golden Gate Park. We definitely want to get out of town. We did Mount Tam pretty recently (the whole thing from the beginning of the stairs to Stinson) – it was really long, and we are definitely in the mood for something different this weekend! Ocean views would still be nice. We love delicious food; one thing I loved about the Mt. Tam hike is that it ends with a celebration (arriving in town for breakfast!). The old missile silos and stuff near Discovery Point are cool, but I've done that hike probably 20x at this point. We won't be seeing each other for a few weeks (she has to stay in LA for work), so the uniqueness of this hike really counts."
-
-Your output MUST be a JSON object with a single key "refinedPrompts" which is an array of 2-3 strings, where each string is a complete prompt. For example:
-{
-  "refinedPrompts": [
-    "Prompt variation 1...",
-    "Prompt variation 2...",
-    "Prompt variation 3..."
-  ]
-}
-
-Generate the array of refined prompts now.
-`,
+Generate the array of refined prompts now.`,
 });
 
 const refinePromptFlow = ai.defineFlow(
